@@ -74,6 +74,7 @@ def main():
                                   start_new_session=True,
                                   env=env_copy) as process:
                 try:
+                    wait4 = os.wait4(process.pid, 0)[2]
                     process.communicate(None, timeout=args.timeout)
                     return_code = process.poll()
                 except subprocess.TimeoutExpired:
@@ -90,6 +91,8 @@ def main():
             # This is the value returned by /bin/sh when an executable could
             # not be found.
             return_code = 127
+        time = wait4.ru_utime + wait4.ru_stime
+        memory = wait4.ru_maxrss
 
         stdout_len = os.path.getsize(stdout.name)
         stdout_truncated = (
@@ -103,6 +106,8 @@ def main():
             'timed_out': timed_out,
             'stdout_truncated': stdout_truncated,
             'stderr_truncated': stderr_truncated,
+            'time': time,
+            'memory': memory
         }
 
         json_data = json.dumps(results)

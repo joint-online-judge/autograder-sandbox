@@ -195,7 +195,12 @@ class AutograderSandbox:
         create_args.append(self.docker_image)  # Image to use
         create_args.append('/bin/bash')
 
-        subprocess.check_call(create_args, timeout=self._container_create_timeout)
+        subprocess.check_call(
+            create_args,
+            timeout=self._container_create_timeout,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
         try:
             cmd_runner_source = os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
@@ -220,11 +225,14 @@ class AutograderSandbox:
 
     def _destroy(self) -> None:
         self._stop()
-        subprocess.check_call(['docker', 'rm', self.name])
+        subprocess.check_call(['docker', 'rm', self.name], stdout=subprocess.DEVNULL)
         self._is_running = False
 
     def _stop(self) -> None:
-        subprocess.check_call(['docker', 'stop', '--time', '1', self.name])
+        subprocess.check_call(
+            ['docker', 'stop', '--time', '1', self.name],
+            stdout=subprocess.DEVNULL
+        )
 
     @property
     def name(self) -> str:
@@ -373,7 +381,9 @@ class AutograderSandbox:
                                           stdout=stdout,
                                           stderr=stderr,
                                           stdout_truncated=results_json['stdout_truncated'],
-                                          stderr_truncated=results_json['stderr_truncated'])
+                                          stderr_truncated=results_json['stderr_truncated'],
+                                          time=results_json['time'],
+                                          memory=results_json['memory'])
 
                 if (result.return_code != 0 or results_json['timed_out']) and check:
                     self._raise_sandbox_command_error(stdout=runner_stdout, stderr=runner_stderr)
@@ -510,7 +520,9 @@ class CompletedCommand:
         stderr: IO[bytes],
         timed_out: bool,
         stdout_truncated: bool,
-        stderr_truncated: bool
+        stderr_truncated: bool,
+        time: float,
+        memory: int,
     ):
         """
         :param return_code: The return code of the command,
@@ -529,3 +541,5 @@ class CompletedCommand:
         self.timed_out = timed_out
         self.stdout_truncated = stdout_truncated
         self.stderr_truncated = stderr_truncated
+        self.time = time
+        self.memory = memory
