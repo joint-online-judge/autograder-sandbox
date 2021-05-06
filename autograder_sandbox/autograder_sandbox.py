@@ -413,6 +413,8 @@ class AutograderSandbox:
                     stderr=stderr,
                     stdout_truncated=False,
                     stderr_truncated=True,
+                    time=0,
+                    memory=0,
                 )
             except subprocess.CalledProcessError as e:
                 # For some reason mypy wants us to return, even though
