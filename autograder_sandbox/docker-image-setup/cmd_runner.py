@@ -65,6 +65,8 @@ def main():
             env_copy['HOME'] = record.pw_dir
             env_copy['USER'] = record.pw_name
             env_copy['LOGNAME'] = record.pw_name
+        time = 0
+        memory = 0
         try:
             with subprocess.Popen(args.cmd_args,
                                   stdin=stdin,
@@ -74,8 +76,10 @@ def main():
                                   start_new_session=True,
                                   env=env_copy) as process:
                 try:
-                    wait4 = os.wait4(process.pid, 0)[2]
                     process.communicate(None, timeout=args.timeout)
+                    rusage = resource.getrusage(resource.RUSAGE_CHILDREN)
+                    time = rusage.ru_utime + rusage.ru_stime
+                    memory = rusage.ru_maxrss
                     return_code = process.poll()
                 except subprocess.TimeoutExpired:
                     # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
@@ -91,8 +95,6 @@ def main():
             # This is the value returned by /bin/sh when an executable could
             # not be found.
             return_code = 127
-        time = wait4.ru_utime + wait4.ru_stime
-        memory = wait4.ru_maxrss
 
         stdout_len = os.path.getsize(stdout.name)
         stdout_truncated = (
@@ -131,7 +133,7 @@ def main():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--timeout", type=int)
+    parser.add_argument("--timeout", type=float)
     parser.add_argument("--block_process_spawn", action='store_true', default=False)
     parser.add_argument("--max_stack_size", type=int)
     parser.add_argument("--max_virtual_memory", type=int)
