@@ -68,6 +68,7 @@ def main():
         time = 0
         memory = 0
         try:
+            init_maxrss = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
             with subprocess.Popen(args.cmd_args,
                                   stdin=stdin,
                                   stdout=stdout,
@@ -79,7 +80,7 @@ def main():
                     process.communicate(None, timeout=args.timeout)
                     rusage = resource.getrusage(resource.RUSAGE_CHILDREN)
                     time = rusage.ru_utime + rusage.ru_stime
-                    memory = rusage.ru_maxrss
+                    memory = rusage.ru_maxrss - init_maxrss
                     return_code = process.poll()
                 except subprocess.TimeoutExpired:
                     # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
