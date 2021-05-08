@@ -9,7 +9,7 @@ Full API documentation can be found at http://autograder-sandbox.readthedocs.io
 
 ## Installation
 1. Install [Docker](https://docs.docker.com/engine/installation/)
-1. Install this library with pip: `pip install autograder-sandbox`
+1. Install this library with pip: `pip install .`
 The first time you start a sandbox (using a context manager), the appropriate Docker image will be downloaded automatically.
 
 ## Configuration
